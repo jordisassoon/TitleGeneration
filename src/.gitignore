@@ -161,3 +161,9 @@ cython_debug/
 
 /data
 /out
+
+# Folders
+bin/
+
+# Notebooks # TODO @abhaydmathur : UNCOMMENT FOR FINAL VERSION
+#*.ipynb
