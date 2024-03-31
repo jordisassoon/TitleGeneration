@@ -51,14 +51,11 @@ def unicodeToAscii(s):
 
 # Lowercase, trim, and remove non-letter characters
 def normalizeString(s):
-    s = unicodeToAscii(s.lower().strip())
-    s = re.sub(r"([.!?])", r" \1", s)
-    s = re.sub(r"[^a-zA-Z!?]+", r" ", s)
     return s.strip()
 
-MAX_LENGTH = 384
+MAX_LENGTH = 512
 
-def readLangs(lang1, lang2, reverse=False, MAX_LENGTH=384):
+def readLangs(lang1, lang2, reverse=False, MAX_LENGTH=512):
     print("Reading lines...")
 
     df = pd.read_csv('data/validation.csv')
@@ -142,7 +139,7 @@ class AttnDecoderRNN(nn.Module):
         decoder_outputs = []
         attentions = []
 
-        for i in range(MAX_LENGTH):
+        for i in range(60):
             decoder_output, decoder_hidden, attn_weights = self.forward_step(
                 decoder_input, decoder_hidden, encoder_outputs
             )
@@ -190,15 +187,15 @@ def tensorsFromPair(pair):
     return (input_tensor, target_tensor)
 
 def get_dataloader(batch_size):
-    input_lang, output_lang, pairs = prepareData('text', 'titles', True)
+    input_lang, output_lang, pairs = prepareData('text', 'titles', False)
 
     n = len(pairs)
     input_ids = np.zeros((n, MAX_LENGTH), dtype=np.int32)
-    target_ids = np.zeros((n, MAX_LENGTH), dtype=np.int32)
+    target_ids = np.zeros((n, 60), dtype=np.int32)
 
     for idx, (inp, tgt) in enumerate(pairs):
         inp_ids = indexesFromSentence(input_lang, inp)
-        tgt_ids = indexesFromSentence(output_lang, tgt)
+        tgt_ids = indexesFromSentence(output_lang, tgt)[:59]
         inp_ids.append(EOS_token)
         tgt_ids.append(EOS_token)
         input_ids[idx, :len(inp_ids)] = inp_ids
@@ -302,4 +299,38 @@ input_lang, output_lang, train_dataloader = get_dataloader(batch_size)
 encoder = EncoderRNN(input_lang.n_words, hidden_size).to(device)
 decoder = AttnDecoderRNN(hidden_size, output_lang.n_words).to(device)
 
-train(train_dataloader, encoder, decoder, 80, print_every=1, plot_every=5)
+train(train_dataloader, encoder, decoder, 50, print_every=1, plot_every=5)
+
+_, _, pairs = prepareData('text', 'titles', False)
+
+def evaluate(encoder, decoder, sentence, input_lang, output_lang):
+    with torch.no_grad():
+        input_tensor = tensorFromSentence(input_lang, sentence)
+
+        encoder_outputs, encoder_hidden = encoder(input_tensor)
+        decoder_outputs, decoder_hidden, decoder_attn = decoder(encoder_outputs, encoder_hidden)
+
+        _, topi = decoder_outputs.topk(1)
+        decoded_ids = topi.squeeze()
+
+        decoded_words = []
+        for idx in decoded_ids:
+            if idx.item() == EOS_token:
+                decoded_words.append('<EOS>')
+                break
+            decoded_words.append(output_lang.index2word[idx.item()])
+    return decoded_words, decoder_attn
+
+def evaluateRandomly(encoder, decoder, n=10):
+    for i in range(n):
+        pair = random.choice(pairs)
+        print('>', pair[0])
+        print('=', pair[1])
+        output_words, _ = evaluate(encoder, decoder, pair[0], input_lang, output_lang)
+        output_sentence = ' '.join(output_words)
+        print('<', output_sentence)
+        print('')
+
+encoder.eval()
+decoder.eval()
+evaluateRandomly(encoder, decoder)
