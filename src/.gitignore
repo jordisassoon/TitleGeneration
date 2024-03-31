@@ -164,6 +164,7 @@ cython_debug/
 
 # Folders
 bin/
+ppo/
 
 # Notebooks # TODO @abhaydmathur : UNCOMMENT FOR FINAL VERSION
 #*.ipynb

@@ -1,0 +1,17 @@
+nltk
+torch
+gensim
+scikit-learn
+transformers[torch]
+numpy 
+matplotlib
+rouge-score
+pandas
+spacy
+networkx
+numpy
+scipy
+sacremoses
+trl
+wandb
+sentencepiece
