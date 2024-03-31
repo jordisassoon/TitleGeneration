@@ -48,5 +48,5 @@ print("Average Rouge-L F-Score with EXT-ORACLE:", avg_rouge_score_ext_oracle)
 # Store the generated summaries in the Kaggle-accepted format
 lead_submission_df = pd.DataFrame(lead_summaries, columns=['ID', 'titles'])
 ext_oracle_submission_df = pd.DataFrame(ext_oracle_summaries, columns=['ID', 'titles'])
-lead_submission_df.to_csv('lead_submission.csv', index=False)
-ext_oracle_submission_df.to_csv('ext_oracle_submission.csv', index=False)
+lead_submission_df.to_csv('./out/lead_submission.csv', index=False)
+ext_oracle_submission_df.to_csv('./out/ext_oracle_submission.csv', index=False)
